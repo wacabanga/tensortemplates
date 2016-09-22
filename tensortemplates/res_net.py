@@ -17,7 +17,8 @@ def res_net_template_dict(inputs, out_shapes, **kwargs):
     outputs, params = res_net_template(input_list, out_shapes_list, **kwargs)
     return dict(zip(out_shapes.keys(), outputs)), params
 
-def res_net_template(inputs, out_shapes, **kwargs):
+
+def res_net(inputs, out_shapes, **kwargs):
     """
     Residual neural network inputs
     inputs : [tf.Tensor/tf.Variable] - inputs to by transformed
@@ -68,6 +69,16 @@ def res_net_template(inputs, out_shapes, **kwargs):
 
     return outputs, params
 
+def res_net_kwargs():
+    options = {}
+    options['train'] = (True,)
+    options['nblocks'] = (int, 1)
+    options['block_size'] = (int, 2)
+    options['batch_size'] = (int, 512)
+    options['nfilters'] = (int, 24)
+    options['layer_width'] = (int, 50)
+    return options
+
 def test_res_net():
     batch_size = 128
     x = tf.placeholder(tf.float32, shape=(batch_size, 10))
@@ -83,4 +94,3 @@ def test_res_net():
     sess.run(outputs, feed_dict=feed)
 
 # test_res_net()
-
