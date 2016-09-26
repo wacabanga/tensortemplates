@@ -80,7 +80,7 @@ def sliceup(t, shapes):
     return outputs
 
 
-def res_net(inputs, inp_shapes, out_shapes, **kwargs):
+def template(inputs, inp_shapes, out_shapes, **kwargs):
     """
     Residual neural network
     inputs : [tf.Tensor/tf.Variable] - inputs to be transformed
@@ -128,8 +128,8 @@ def res_net(inputs, inp_shapes, out_shapes, **kwargs):
 
                  # On all other layers prev_layer_width = layer_width
                 prev_layer_width = layer_width
-        if nblocks > 1:
-            prev_layer = wx = prev_layer + wx
+            if nblocks > 1:
+                prev_layer = wx = prev_layer + wx
 
     ## Project output to correct width
     if layer_width != output_width:
@@ -145,7 +145,7 @@ def res_net(inputs, inp_shapes, out_shapes, **kwargs):
     return outputs, params
 
 
-def res_net_kwargs():
+def kwargs():
     """Return (default) arguments for a residual network"""
     options = {}
     options['train'] = (True,)
