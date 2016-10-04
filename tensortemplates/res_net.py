@@ -13,10 +13,11 @@ def batch_flatten(t):
     return tf.reshape(t, [tf.shape(t)[0], -1])
 
 
-def res_net_template_dict(inputs, out_shapes, **kwargs):
+def template_dict(inputs, inp_shapes, out_shapes, **kwargs):
     input_list = list(inputs.values())
+    inp_shapes_list = list(inp_shapes.values())
     out_shapes_list = list(out_shapes.values())
-    outputs, params = res_net_template(input_list, out_shapes_list, **kwargs)
+    outputs, params = template(input_list, inp_shapes_list, out_shapes_list, **kwargs)
     return dict(zip(out_shapes.keys(), outputs)), params
 
 
@@ -41,7 +42,7 @@ def batch_norm(x):
 
 
 def layer(x, inp_width, out_width, sfx, nl=tf.nn.relu,
-          W_init=None, b_init=None):
+          W_init=None, b_init=tf.zeros_initializer, layer_norm=False):
     """Neural Network Layer - nl(Wx+b)"""
     with tf.name_scope("layer"):
         W = tf.get_variable(name="W_%s" % sfx, shape=(inp_width, out_width),
@@ -49,6 +50,10 @@ def layer(x, inp_width, out_width, sfx, nl=tf.nn.relu,
         b = tf.get_variable(name="b_%s" % sfx, shape=(out_width),
                             initializer=b_init)
         mmbias = tf.matmul(x, W) + b
+        # mmbias = tf.Print(mmbias, [mmbias], message="mmbias")
+        if layer_norm:
+            mmbias = tf.contrib.layers.layer_norm(mmbias)
+        # mmbias = tf.Print(mmbias, [mmbias], message="lnmmbias")
         op = nl(mmbias, name='op_%s' % sfx)
     return op
 
@@ -73,6 +78,7 @@ def sliceup(t, shapes):
         for i in range(noutputs):
             ub = lb + flat_shapes[i]
             out = t[:, lb:ub]
+            # import pdb; pdb.set_trace()
             new_shape = (tf.shape(out)[0],) + shapes[i][1:]
             rout = tf.reshape(out, new_shape)
             outputs.append(rout)
@@ -118,6 +124,7 @@ def template(inputs, inp_shapes, out_shapes, **kwargs):
 
     # On first layer only prev_layer_width = input_width
     prev_layer_width = input_width
+    # prev_layer = tf.Print(prev_layer, [prev_layer], message="resnetinp")
     ## Residual Blocks
     for j in range(nblocks):
         with tf.name_scope("residual_block"):
@@ -148,11 +155,8 @@ def template(inputs, inp_shapes, out_shapes, **kwargs):
 def kwargs():
     """Return (default) arguments for a residual network"""
     options = {}
-    options['train'] = (True,)
     options['nblocks'] = (int, 1)
-    options['block_size'] = (int, 2)
-    options['batch_size'] = (int, 512)
-    options['nfilters'] = (int, 24)
+    options['block_size'] = (int, 1)
     options['layer_width'] = (int, 50)
     return options
 
