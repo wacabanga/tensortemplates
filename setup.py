@@ -1,7 +1,7 @@
 from setuptools import setup
 
 # import `__version__` from code base
-exec(open('reverseflow/version.py').read())
+exec(open('tensortemplates/version.py').read())
 
 setup(
     name='tensortemplates',
