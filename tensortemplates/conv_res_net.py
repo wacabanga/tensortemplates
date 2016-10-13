@@ -18,16 +18,18 @@ def conv_layer(x, ninp_channels, nout_channels, sfx, nl=tf.nn.relu, reuse=False)
     # import pdb; pdb.set_trace()
     with tf.name_scope("conv_layer"):
         with tf.variable_scope(sfx) as scope:
-            W = tf.get_variable(name="W_%s" % sfx,
-                                initializer=tf.truncated_normal([5, 5, ninp_channels, nout_channels],
-                                                    stddev=0.1,
-                                                    dtype=tf.float32))
-            b = tf.get_variable(name="b_%s" % sfx,
-                                initializer=tf.zeros([nout_channels], dtype=tf.float32))
+            W = tf.get_variable(name="W_%s" % sfx, shape=[3, 3, ninp_channels, nout_channels],
+                                initializer=tf.random_uniform_initializer())
+            b = tf.get_variable(name="b_%s" % sfx, shape=[nout_channels],
+                                initializer=tf.zeros_initializer)
             conv = tf.nn.conv2d(x,
                                 W,
                                 strides=[1, 1, 1, 1],
-                                padding='SAME')
+                                padding='SAME',
+                                use_cudnn_on_gpu=True)
+            # conv = tf.reduce_mean(conv)
+            # conv = tf.contrib.layers.batch_norm(conv, is_training=True, trainable=True)
+            conv = tf.contrib.layers.batch_norm(conv, trainable=False, reuse=reuse, scope=scope)
             op = tf.nn.relu(tf.nn.bias_add(conv, b))
     return op
 
@@ -49,7 +51,7 @@ def stack_channels(inputs, shapes, width, height):
         input_channels = []
         for i in range(len(inputs)):
             inp_ndim = len(shapes[i])
-            nchannels = 1
+            nchannels = 1 #FIXME
             ch = tf.reshape(inputs[i], [tf.shape(inputs[i])[0], height, width, nchannels])
             input_channels.append(ch)
         concat_img = tf.concat(CHANNEL_DIM, input_channels)
@@ -78,13 +80,14 @@ def template(inputs, inp_shapes, out_shapes, **kwargs):
 
     ## Convolutional Layers
     ## ====================if nblocks > 1:
+    nprevlayer_channels = ninp_channels
+    nlayer_channels = nfilters
 
     ## wx Input Projection
     if nblocks > 1:
-        wx = conv_layer(prev_layer, ninp_channels=ninp_channels, nout_channels=nout_channels, sfx='wx', reuse=reuse)
+        wx = conv_layer(prev_layer, ninp_channels=ninp_channels, nout_channels=nlayer_channels, sfx='wx', reuse=reuse)
 
-    nprevlayer_channels = ninp_channels
-    nlayer_channels = nfilters
+
     ## Residual Blocks
     for j in range(nblocks):
         with tf.name_scope("residual_block"):
