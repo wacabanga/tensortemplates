@@ -26,7 +26,6 @@ def test_conv_res_net() -> None:
 
 
 def test_conv_res_net_mnist() -> None:
-    sess = tf.InteractiveSession()
     tf.reset_default_graph()
     from tensorflow.examples.tutorials.mnist import input_data
     batch_size = 50
@@ -50,6 +49,7 @@ def test_conv_res_net_mnist() -> None:
 
     loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(y, y_))
     train_step = tf.train.GradientDescentOptimizer(0.5).minimize(loss)
+    sess = tf.InteractiveSession()
     sess.run(tf.initialize_all_variables())
     for i in range(100):
         batch = mnist.train.next_batch(batch_size)
