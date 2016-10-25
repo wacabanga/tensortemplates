@@ -30,7 +30,7 @@ def test_res_net_mnist() -> None:
     batch_size = 128
     input_shapes = [(batch_size, 784)]
     output_shapes = [(batch_size, 10)]
-    kwargs = {'layer_width': 10, 'block_size': 1, 'nblocks': 1}
+    kwargs = {'layer_width': 10, 'block_size': 2, 'nblocks': 1}
     outputs, params = template([x], input_shapes, output_shapes, **kwargs)
     y = outputs[0]
 

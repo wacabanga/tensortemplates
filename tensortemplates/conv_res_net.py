@@ -17,7 +17,7 @@ def consistent_batch_size(shapes) -> bool:
 
 
 def conv_layer(x: TensVar, ninp_channels: int, nout_channels: int, sfx: str,
-               filter_height=3, filter_width=3,
+               filter_height=5, filter_width=5,
                nl=tf.nn.relu, reuse=False) -> TensVar:
     """Neural Network Layer - nl(Wx+b)
     x: ImgShape:[batch, in_height, in_width, in_channels]`
@@ -27,9 +27,9 @@ def conv_layer(x: TensVar, ninp_channels: int, nout_channels: int, sfx: str,
             W = tf.get_variable(name="W_%s" % sfx,
                                 shape=[filter_height, filter_width,
                                        ninp_channels, nout_channels],
-                                initializer=tf.random_uniform_initializer())
+                                initializer=tf.truncated_normal_initializer(stddev=0.1))
             b = tf.get_variable(name="b_%s" % sfx, shape=[nout_channels],
-                                initializer=tf.zeros_initializer)
+                                initializer=tf.constant_initializer(0.1))
             conv = tf.nn.conv2d(x,
                                 W,
                                 strides=[1, 1, 1, 1],

@@ -39,7 +39,7 @@ def test_conv_res_net_mnist() -> None:
     output_shapes = [(batch_size, 28, 28, 1)]
     # output_shapes = [(batch_size, 10)]
     kwargs = {'layer_width': 10, 'block_size': 1, 'nblocks': 1, 'width': 28,
-              'height': 28, 'nfilters': 5, 'reuse': False}
+              'height': 28, 'nfilters': 32, 'reuse': False}
     outputs, params = template(inputs, input_shapes, output_shapes, **kwargs)
     sess = tf.InteractiveSession()
     sess.run(tf.initialize_all_variables())
@@ -58,6 +58,8 @@ def test_conv_res_net_mnist() -> None:
     for i in range(100):
         batch = mnist.train.next_batch(batch_size)
         train_step.run(feed_dict={x: batch[0], y_: batch[1]})
+        op = sess.run([loss, train_step], feed_dict={x: batch[0], y_: batch[1]})
+        print(op)
 
 
     # Evaluation
