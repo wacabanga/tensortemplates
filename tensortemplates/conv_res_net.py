@@ -39,6 +39,7 @@ def conv_layer(x: TensVar, ninp_channels: int, nout_channels: int, sfx: str,
             # conv = tf.contrib.layers.batch_norm(conv, is_training=True, trainable=True)
             conv = tf.contrib.layers.batch_norm(conv, trainable=False, reuse=reuse, scope=scope)
             op = tf.nn.relu(tf.nn.bias_add(conv, b))
+            op = nl(op)
     return op
 
 
