@@ -28,7 +28,7 @@ def test_conv_res_net() -> None:
 def test_conv_res_net_mnist() -> None:
     tf.reset_default_graph()
     from tensorflow.examples.tutorials.mnist import input_data
-    batch_size = 10
+    batch_size = 50
     mnist = input_data.read_data_sets('MNIST_data', one_hot=True)
     x = tf.placeholder(tf.float32, shape=[None, 784])
     y_ = tf.placeholder(tf.float32, shape=[None, 10])
@@ -52,7 +52,6 @@ def test_conv_res_net_mnist() -> None:
     y = tf.matmul(y_flat, W_dense) + b
 
     loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(y, y_))
-    sess = tf.InteractiveSession()
     train_step = tf.train.GradientDescentOptimizer(0.5).minimize(loss)
     sess.run(tf.initialize_all_variables())
     for i in range(100):
