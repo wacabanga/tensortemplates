@@ -1,4 +1,5 @@
-from tensorflow import Tensor
+from typing import Tuple, List, Union
+from tensorflow import Tensor, Variable
 import tensorflow as tf
 from tensortemplates.util.misc import same
 # from tensorflow.contrib.layers import conv2d
@@ -6,6 +7,8 @@ from tensorflow import nn
 conv2d = nn.conv2d
 
 CHANNEL_DIM = 3
+TensVar = Union[Tensor, Variable]
+ImgShape = Tuple[int, int, int, int]  # (batch, height, width, channels)
 
 
 def consistent_batch_size(shapes) -> bool:
@@ -13,11 +16,11 @@ def consistent_batch_size(shapes) -> bool:
     return same([shape[0] for shape in shapes])
 
 
-def conv_layer(x: Tensor, ninp_channels: int, nout_channels: int, sfx: str,
+def conv_layer(x: TensVar, ninp_channels: int, nout_channels: int, sfx: str,
                filter_height=3, filter_width=3,
-               nl=tf.nn.relu, reuse=False) -> Tensor:
+               nl=tf.nn.relu, reuse=False) -> TensVar:
     """Neural Network Layer - nl(Wx+b)
-    x: Shape:[batch, in_height, in_width, in_channels]`
+    x: ImgShape:[batch, in_height, in_width, in_channels]`
     """
     with tf.name_scope("conv_layer"):
         with tf.variable_scope(sfx) as scope:
@@ -39,7 +42,7 @@ def conv_layer(x: Tensor, ninp_channels: int, nout_channels: int, sfx: str,
     return op
 
 
-def unstack_channel(t, shapes):
+def unstack_channel(t: TensVar, shapes: List[ImgShape]) -> List[TensVar]:
     """Slice and reshape a flat input (batch_size, n) to list of tensors"""
     with tf.name_scope("unchannel"):
         outputs = []
@@ -49,7 +52,8 @@ def unstack_channel(t, shapes):
     return outputs
 
 
-def stack_channels(inputs, shapes, width: int, height: int) -> Tensor:
+def stack_channels(inputs: List[TensVar], shapes: List[ImgShape], width: int,
+                   height: int) -> TensVar:
     """Take list of inputs of same size and stack in channel dimension"""
     with tf.name_scope("channel"):
         input_channels = []
@@ -62,11 +66,12 @@ def stack_channels(inputs, shapes, width: int, height: int) -> Tensor:
     return concat_img
 
 
-def template(inputs, inp_shapes, out_shapes, **options) -> Tensor:
+def template(inputs: List[TensVar], inp_shapes: List[ImgShape],
+             out_shapes: List[ImgShape], **options) -> Tuple[TensVar, List]:
     """
     Convolutional (residual) neural network
-    inputs : [tf.Tensor/tf.Variable] - inputs to be transformed
-    out_shapes : (tf.TensorShape) | (Int) - shapes of output of tensor (includes batch_size)
+    inputs : [tf.TensVar/tf.Variable] - inputs to be transformed
+    out_shapes : (tf.TensVarImgShape) | (Int) - shapes of output of tensor (includes batch_size)
     """
     # Meta Parameters
     nblocks = options['nblocks']
@@ -117,7 +122,7 @@ def template(inputs, inp_shapes, out_shapes, **options) -> Tensor:
 
     # Unconcatenate output and separate
     outputs = unstack_channel(prev_layer, out_shapes)
-    params = []
+    params = []  # type: List[Variable]
     return outputs, params
 
 

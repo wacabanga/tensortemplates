@@ -10,7 +10,7 @@ def test_conv_res_net() -> None:
     height = 20
     x = tf.placeholder(tf.float32, shape=(batch_size, width, height))
     y = tf.placeholder(tf.float32, shape=(batch_size, width, height))
-    inputs = (x, y)
+    inputs = [x, y]
     shape = (batch_size, height, width, 1)
     input_shapes = [shape, shape]
     output_shapes = [shape, shape]

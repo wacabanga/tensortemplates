@@ -8,7 +8,7 @@ def test_res_net() -> None:
     batch_size = 128
     x = tf.placeholder(tf.float32, shape=(batch_size, 10))
     y = tf.placeholder(tf.float32, shape=(batch_size, 10, 20))
-    inputs = (x, y)
+    inputs = [x, y]
     input_shapes = [(batch_size, 10), (batch_size, 10, 20)]
     output_shapes = [(batch_size, 20), (batch_size, 30)]
     kwargs = {'layer_width': 10, 'block_size': 1, 'nblocks': 1}
