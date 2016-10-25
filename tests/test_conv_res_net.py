@@ -41,10 +41,6 @@ def test_conv_res_net_mnist() -> None:
     kwargs = {'layer_width': 10, 'block_size': 1, 'nblocks': 1, 'width': 28,
               'height': 28, 'nfilters': 32, 'reuse': False}
     outputs, params = template(inputs, input_shapes, output_shapes, **kwargs)
-    sess = tf.InteractiveSession()
-    sess.run(tf.initialize_all_variables())
-    y_data = outputs[0].eval(feed_dict={x: np.random.rand(10, 784)})
-
 
     y_flat = tf.reshape(outputs[0], [-1, 28 * 28])
     W_dense = tf.Variable(tf.truncated_normal([28 * 28, 10], stddev=0.1))
