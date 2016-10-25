@@ -1,14 +1,15 @@
 import tensorflow as tf
+from tensorflow import Tensor
 import numpy as np
 from tensortemplates.util import *
 
 
-def consistent_batch_size(shapes):
+def consistent_batch_size(shapes) -> bool:
     """Are the batch sizes the same"""
     return same([shape[0] for shape in shapes])
 
 
-def batch_flatten(t):
+def batch_flatten(t: Tensor) -> Tensor:
     """Reshape tensor so that it is flat vector (except for batch dimension)"""
     return tf.reshape(t, [tf.shape(t)[0], -1])
 
@@ -21,28 +22,12 @@ def template_dict(inputs, inp_shapes, out_shapes, **kwargs):
     return dict(zip(out_shapes.keys(), outputs)), params
 
 
-def reshape_input(inp_shapes):
-    flat_input_shapes = [np.prod(inp_shape[1:]) for inp_shape in inp_shapes]
-    input_width = np.sum(flat_input_shapes)
-
-    flat_output_shapes = [np.prod(out_shape[1:]) for out_shape in out_shapes]
-    output_width = np.sum(flat_output_shapes)
-
-    # Num inputs and outputs
-    ninputs = len(inp_shapes)
-    noutputs = len(out_shapes)
-
-    flat_inputs = [batch_flatten(inp) for inp in inputs]
-    x = tf.concat(1, flat_inputs)
-    return x, flat_input_shapes
-
-
 def batch_norm(x):
     return x
 
 
-def layer(x, inp_width, out_width, sfx, nl=tf.nn.relu,
-          W_init=None, b_init=tf.zeros_initializer, layer_norm=False):
+def layer(x: Tensor, inp_width: int, out_width: int, sfx: str, nl=tf.nn.relu,
+          W_init=None, b_init=tf.zeros_initializer, layer_norm: bool=False):
     """Neural Network Layer - nl(Wx+b)"""
     with tf.name_scope("layer"):
         W = tf.get_variable(name="W_%s" % sfx, shape=(inp_width, out_width),
@@ -92,13 +77,13 @@ def template(inputs, inp_shapes, out_shapes, **kwargs):
     inputs : [tf.Tensor/tf.Variable] - inputs to be transformed
     out_shapes : (tf.TensorShape) | (Int) - shapes of output of tensor (includes batch_size)
     """
-    ## Meta Parameters
+    # Meta Parameters
     layer_width = kwargs['layer_width']
     nblocks = kwargs['nblocks']
     block_size = kwargs['block_size']
     output_args = kwargs['output_args']
 
-    ## Handle Reshaping (res_net expects input as vector)
+    # Handle Reshaping (res_net expects input as vector)
     print("Input Shapes to Resnet", inp_shapes)
     print("Output Shapes to Resnet", out_shapes)
     assert consistent_batch_size(inp_shapes + out_shapes), "Batch sizes differ"
