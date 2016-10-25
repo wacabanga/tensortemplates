@@ -81,7 +81,6 @@ def template(inputs, inp_shapes, out_shapes, **kwargs):
     layer_width = kwargs['layer_width']
     nblocks = kwargs['nblocks']
     block_size = kwargs['block_size']
-    output_args = kwargs['output_args']
 
     # Handle Reshaping (res_net expects input as vector)
     print("Input Shapes to Resnet", inp_shapes)
@@ -114,6 +113,7 @@ def template(inputs, inp_shapes, out_shapes, **kwargs):
     for j in range(nblocks):
         with tf.name_scope("residual_block"):
             for i in range(block_size):
+                print("IJ",i," ", j)
                 sfx = "%s_%s" % (j, i)
                 prev_layer = output = layer(prev_layer, prev_layer_width,
                                             layer_width, sfx)
@@ -144,19 +144,3 @@ def kwargs():
     options['block_size'] = (int, 1)
     options['layer_width'] = (int, 50)
     return options
-
-def test_res_net():
-    batch_size = 128
-    x = tf.placeholder(tf.float32, shape=(batch_size, 10))
-    y = tf.placeholder(tf.float32, shape=(batch_size, 10, 20))
-    inputs = (x,y)
-    output_shapes = [(batch_size, 20), (batch_size, 30)]
-    outputs, params = res_net_template(inputs, output_shapes)
-
-    ## Run the damn thing
-    sess = tf.Session()
-    sess.run(tf.initialize_all_variables())
-    feed = {t:np.random.rand(*t.get_shape().as_list()) for t in inputs}
-    sess.run(outputs, feed_dict=feed)
-
-# test_res_net()
