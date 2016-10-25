@@ -26,6 +26,7 @@ def test_conv_res_net() -> None:
 
 
 def test_conv_res_net_mnist() -> None:
+    sess = tf.InteractiveSession()
     tf.reset_default_graph()
     from tensorflow.examples.tutorials.mnist import input_data
     batch_size = 50
