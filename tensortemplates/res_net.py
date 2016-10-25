@@ -1,7 +1,7 @@
 import tensorflow as tf
 from tensorflow import Tensor
 import numpy as np
-from tensortemplates.util import *
+from tensortemplates.util.misc import same
 
 
 def consistent_batch_size(shapes) -> bool:
