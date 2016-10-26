@@ -1,8 +1,8 @@
 from typing import Tuple, List, Union
-from tensorflow import Tensor, Variable
-import tensorflow as tf
 from tensortemplates.util.misc import same
-# from tensorflow.contrib.layers import conv2d
+import tensorflow as tf
+from tensorflow import Tensor, Variable
+from tensorflow.contrib.layers import layer_norm
 from tensorflow import nn
 conv2d = nn.conv2d
 
@@ -37,7 +37,7 @@ def conv_layer(x: TensVar, ninp_channels: int, nout_channels: int, sfx: str,
                                 use_cudnn_on_gpu=True)
             # conv = tf.reduce_mean(conv)
             # conv = tf.contrib.layers.batch_norm(conv, is_training=True, trainable=True)
-            conv = tf.contrib.layers.batch_norm(conv, trainable=False, reuse=reuse, scope=scope)
+            # conv = tf.contrib.layers.batch_norm(conv, trainable=False, reuse=reuse, scope=scope)
             op = tf.nn.relu(tf.nn.bias_add(conv, b))
             op = nl(op)
     return op
@@ -45,26 +45,38 @@ def conv_layer(x: TensVar, ninp_channels: int, nout_channels: int, sfx: str,
 
 def unstack_channel(t: TensVar, shapes: List[ImgShape]) -> List[TensVar]:
     """Slice and reshape a flat input (batch_size, n) to list of tensors"""
-    with tf.name_scope("unchannel"):
-        outputs = []
-        for i in range(len(shapes)):
-            outputs.append(t[:, :, :, i:i+1])
+    assert len(shapes) > 0
+    if len(shapes) == 1:
+        print("Only one output skipping unstack")
+        return [t]
+    else:
+        with tf.name_scope("unchannel"):
+            outputs = []
+            for i in range(len(shapes)):
+                outputs.append(t[:, :, :, i:i+1])
 
-    return outputs
+        return outputs
 
 
 def stack_channels(inputs: List[TensVar], shapes: List[ImgShape], width: int,
                    height: int) -> TensVar:
     """Take list of inputs of same size and stack in channel dimension"""
-    with tf.name_scope("channel"):
-        input_channels = []
-        for i in range(len(inputs)):
-            inp_ndim = len(shapes[i])
-            nchannels = 1 # FIXME
-            ch = tf.reshape(inputs[i], [tf.shape(inputs[i])[0], height, width, nchannels])
-            input_channels.append(ch)
-        concat_img = tf.concat(CHANNEL_DIM, input_channels)
-    return concat_img
+    assert len(inputs) > 0
+    if len(inputs) == 1:
+        print("Only one input skipping stack")
+        return inputs[0]
+    else:
+
+        with tf.name_scope("channel"):
+            input_channels = []
+            for i in range(len(inputs)):
+                inp_ndim = len(shapes[i])
+                nchannels = 1 # FIXME
+                ch = tf.reshape(inputs[i], [tf.shape(inputs[i])[0],
+                                height, width, nchannels])
+                input_channels.append(ch)
+            concat_img = tf.concat(CHANNEL_DIM, input_channels)
+        return concat_img
 
 
 def template(inputs: List[TensVar], inp_shapes: List[ImgShape],
