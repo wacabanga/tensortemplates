@@ -16,9 +16,15 @@ def consistent_batch_size(shapes) -> bool:
     return same([shape[0] for shape in shapes])
 
 
-def conv_layer(x: TensVar, ninp_channels: int, nout_channels: int, sfx: str,
-               filter_height=5, filter_width=5,
-               nl=tf.nn.relu, reuse=False) -> TensVar:
+def conv_layer(x: TensVar,
+               ninp_channels: int,
+               nout_channels: int,
+               sfx: str,
+               filter_height=5,
+               filter_width=5,
+               nl=tf.nn.relu,
+               reuse=False,
+               layer_norm=True) -> TensVar:
     """Neural Network Layer - nl(Wx+b)
     x: ImgShape:[batch, in_height, in_width, in_channels]`
     """
@@ -35,11 +41,12 @@ def conv_layer(x: TensVar, ninp_channels: int, nout_channels: int, sfx: str,
                                 strides=[1, 1, 1, 1],
                                 padding='SAME',
                                 use_cudnn_on_gpu=True)
-            # conv = tf.reduce_mean(conv)
             # conv = tf.contrib.layers.batch_norm(conv, is_training=True, trainable=True)
             # conv = tf.contrib.layers.batch_norm(conv, trainable=False, reuse=reuse, scope=scope)
-            op = tf.nn.relu(tf.nn.bias_add(conv, b))
-            op = nl(op)
+            op = conv
+            if layer_norm:
+                op = tf.contrib.layers.layer_norm(op, reuse=reuse, scope=scope)
+            op = nl(tf.nn.bias_add(conv, b))
     return op
 
 
