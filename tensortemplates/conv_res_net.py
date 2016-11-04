@@ -6,7 +6,6 @@ from tensorflow.contrib.layers import layer_norm
 from tensorflow import nn
 conv2d = nn.conv2d
 
-CHANNEL_DIM = 3
 TensVar = Union[Tensor, Variable]
 ImgShape = Tuple[int, int, int, int]  # (batch, height, width, channels)
 
@@ -19,12 +18,13 @@ def consistent_batch_size(shapes) -> bool:
 def conv_layer(x: TensVar,
                ninp_channels: int,
                nout_channels: int,
+               ndim: int,
                sfx: str,
                filter_height=5,
                filter_width=5,
                nl=tf.nn.relu,
                reuse=False,
-               layer_norm=True) -> TensVar:
+               layer_norm=False) -> TensVar:
     """Neural Network Layer - nl(Wx+b)
     x: ImgShape:[batch, in_height, in_width, in_channels]`
     """
@@ -66,7 +66,7 @@ def unstack_channel(t: TensVar, shapes: List[ImgShape]) -> List[TensVar]:
 
 
 def stack_channels(inputs: List[TensVar], shapes: List[ImgShape], width: int,
-                   height: int) -> TensVar:
+                   height: int, CHANNEL_DIM: int) -> TensVar:
     """Take list of inputs of same size and stack in channel dimension"""
     assert len(inputs) > 0
     if len(inputs) == 1:
@@ -99,13 +99,23 @@ def template(inputs: List[TensVar], inp_shapes: List[ImgShape],
     width, height = options['width'], options['height']
     nfilters = options['nfilters']
     reuse = options['reuse']
+    ndim = options['ndim']
+    assert ndim == 2 or ndim == 3, "Supports only 2d or 3d convolution"
+
+    if ndim == 2:
+        CHANNEL_DIM = 3
+    elif ndim == 3:
+        CHANNEL_DIM = 4
 
     assert consistent_batch_size(inp_shapes + out_shapes), "Batch sizes differ"
-    prev_layer = stack_channels(inputs, inp_shapes, width, height)
+    prev_layer = stack_channels(inputs, inp_shapes, width, height, CHANNEL_DIM)
     # ninp_channels = tf.shape(prev_layer)[CHANNEL_DIM]
 
     for shape in out_shapes + inp_shapes:
-        assert len(shape) == 4, "expect batch_size, width, height, nchannels"
+        if ndim == 2:
+            assert len(shape) == 4, "expect batch_size, width, height, nchannels"
+        elif ndim == 3:
+            assert len(shape) == 5, "expect batch_size, width, height, depth, nchannels"
 
     ninp_channels = sum([shape[CHANNEL_DIM] for shape in inp_shapes])
     nout_channels = sum([shape[CHANNEL_DIM] for shape in out_shapes])
@@ -117,8 +127,12 @@ def template(inputs: List[TensVar], inp_shapes: List[ImgShape],
 
     # wx Input Projection
     if nblocks > 1:
-        wx = conv_layer(prev_layer, ninp_channels=ninp_channels,
-                        nout_channels=nlayer_channels, sfx='wx', reuse=reuse)
+        wx = conv_layer(prev_layer,
+                        ninp_channels=ninp_channels,
+                        nout_channels=nlayer_channels,
+                        ndim=ndim,
+                        sfx='wx',
+                        reuse=reuse)
 
     # Residual Blocks
     for j in range(nblocks):
@@ -128,6 +142,7 @@ def template(inputs: List[TensVar], inp_shapes: List[ImgShape],
                 prev_layer = conv_layer(prev_layer,
                                         ninp_channels=nprevlayer_channels,
                                         nout_channels=nlayer_channels,
+                                        ndim=ndim,
                                         sfx=sfx,
                                         reuse=reuse)
                 nprevlayer_channels = nlayer_channels
@@ -137,6 +152,7 @@ def template(inputs: List[TensVar], inp_shapes: List[ImgShape],
     prev_layer = conv_layer(prev_layer,
                             ninp_channels=nlayer_channels,
                             nout_channels=nout_channels,
+                            ndim=ndim,
                             sfx='final_conv',
                             reuse=reuse)
 
@@ -153,4 +169,5 @@ def kwargs():
     options['block_size'] = (int, 2)
     options['batch_size'] = (int, 512)
     options['nfilters'] = (int, 24)
+    options['ndim'] = (int, 2)
     return options
