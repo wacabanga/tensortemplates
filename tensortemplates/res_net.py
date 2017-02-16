@@ -27,14 +27,14 @@ def batch_norm(x):
 
 
 def layer(x: Tensor, inp_width: int, out_width: int, sfx: str, nl=tf.nn.relu,
-          W_init=None, b_init=tf.zeros_initializer, layer_norm: bool=True, reuse=False):
+          W_init=None, b_init=None, layer_norm: bool=True, reuse=False):
     """Neural Network Layer - nl(Wx+b)"""
-
+    # import pdb; pdb.set_trace()
     with tf.name_scope("layer"):
         with tf.variable_scope(sfx) as scope:
             W = tf.get_variable(name="W_%s" % sfx, shape=(inp_width, out_width),
                                 initializer=W_init)
-            b = tf.get_variable(name="b_%s" % sfx, shape=(out_width),
+            b = tf.get_variable(name="b_%s" % sfx, shape=(out_width,),
                                 initializer=b_init)
             mmbias = tf.matmul(x, W) + b
             # mmbias = tf.Print(mmbias, [mmbias], message="mmbias")
@@ -95,7 +95,7 @@ def template(inputs, inp_shapes, out_shapes, **kwargs):
 
     # Num inputs and outputs
     flat_inputs = [batch_flatten(inp) for inp in inputs]
-    prev_layer = tf.concat(1, flat_inputs)
+    prev_layer = tf.concat(flat_inputs, 1)
 
     ## Layers
     ## ======
@@ -135,6 +135,10 @@ def template(inputs, inp_shapes, out_shapes, **kwargs):
     else:
         print("Skipping output projection, layer_width: %s output_width: %s" % (layer_width, output_width))
 
+    with tf.name_scope("bias_add"):
+        b = tf.get_variable(name="final_bias", shape=(output_width),
+                            initializer=None)
+        prev_layer = prev_layer + b
     ## Unconcatenate output and separate
     outputs = sliceup(prev_layer, out_shapes)
     params = []
