@@ -22,12 +22,8 @@ def template_dict(inputs, inp_shapes, out_shapes, **kwargs):
     return dict(zip(out_shapes.keys(), outputs)), params
 
 
-def batch_norm(x):
-    return x
-
-
 def layer(x: Tensor, inp_width: int, out_width: int, sfx: str, nl=tf.nn.relu,
-          W_init=None, b_init=None, layer_norm: bool=True, reuse=False):
+          W_init=None, b_init=None, batch_norm: bool=True, reuse=False):
     """Neural Network Layer - nl(Wx+b)"""
     # import pdb; pdb.set_trace()
     with tf.name_scope("layer"):
@@ -38,7 +34,7 @@ def layer(x: Tensor, inp_width: int, out_width: int, sfx: str, nl=tf.nn.relu,
                                 initializer=b_init)
             mmbias = tf.matmul(x, W) + b
             # mmbias = tf.Print(mmbias, [mmbias], message="mmbias")
-            if layer_norm:
+            if batch_norm:
                 mmbias = tf.contrib.layers.batch_norm(mmbias, reuse=reuse, scope=scope, is_training=False)
                 # mmbias = tf.contrib.layers.layer_norm(mmbias, reuse=reuse, scope=scope)
             # mmbias = tf.Print(mmbias, [mmbias], message="lnmmbias")
@@ -74,11 +70,16 @@ def sliceup(t, shapes):
     return outputs
 
 
-def template(inputs, inp_shapes, out_shapes, **kwargs):
+def template(inputs, inp_shapes, out_shapes,
+             batch_norm=True,
+             **kwargs):
     """
     Residual neural network
-    inputs : [tf.Tensor/tf.Variable] - inputs to be transformed
-    out_shapes : (tf.TensorShape) | (Int) - shapes of output of tensor (includes batch_size)
+    Args:
+        inputs : [tf.Tensor/tf.Variable] - inputs to be transformed
+        out_shapes : (tf.TensorShape) | (Int) - shapes of output of tensor (includes batch_size)
+        batch_norm: Apply batch normalization to layers
+        skip_last_nl: Skip nonlinearity on last layer
     """
     # Meta Parameters
     layer_width = kwargs['layer_width']
@@ -105,7 +106,8 @@ def template(inputs, inp_shapes, out_shapes, **kwargs):
         if layer_width != input_width:
             print("Input projection, layer_width: %s input_width: %s" % (layer_width, input_width))
             wx_sfx = 'wxinpproj'
-            wx = layer(prev_layer, input_width, layer_width, wx_sfx, reuse=reuse)
+            wx = layer(prev_layer, input_width, layer_width, wx_sfx,
+                       batch_norm=batch_norm, reuse=reuse)
         else:
             print("Skipping input weight projection, layer_width: %s input_width: %s" % (layer_width, input_width))
             wx = prev_layer
@@ -120,7 +122,9 @@ def template(inputs, inp_shapes, out_shapes, **kwargs):
                 print("IJ",i," ", j)
                 sfx = "%s_%s" % (j, i)
                 prev_layer = output = layer(prev_layer, prev_layer_width,
-                                            layer_width, sfx, reuse=reuse)
+                                            layer_width, sfx,
+                                            batch_norm=batch_norm,
+                                            reuse=reuse)
 
                  # On all other layers prev_layer_width = layer_width
                 prev_layer_width = layer_width
@@ -131,7 +135,8 @@ def template(inputs, inp_shapes, out_shapes, **kwargs):
     if layer_width != output_width:
         print("Output projection, layer_width: %s output_width: %s" % (layer_width, output_width))
         wx_sfx = 'wxoutproj'
-        prev_layer = layer(prev_layer, layer_width, output_width, wx_sfx, reuse=reuse)
+        prev_layer = layer(prev_layer, layer_width, output_width, wx_sfx,
+                           batch_norm=batch_norm, reuse=reuse)
     else:
         print("Skipping output projection, layer_width: %s output_width: %s" % (layer_width, output_width))
 
