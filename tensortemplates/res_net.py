@@ -22,7 +22,7 @@ def template_dict(inputs, inp_shapes, out_shapes, **kwargs):
     return dict(zip(out_shapes.keys(), outputs)), params
 
 
-def layer(x: Tensor, inp_width: int, out_width: int, sfx: str, nl=tf.nn.relu,
+def layer(x: Tensor, inp_width: int, out_width: int, sfx: str, nl=tf.nn.elu,
           W_init=None, b_init=None, batch_norm: bool=True, reuse=False):
     """Neural Network Layer - nl(Wx+b)"""
     # import pdb; pdb.set_trace()
