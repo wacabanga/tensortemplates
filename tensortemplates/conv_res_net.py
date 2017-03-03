@@ -82,7 +82,7 @@ def stack_channels(inputs: List[TensVar], shapes: List[ImgShape], width: int,
                 ch = tf.reshape(inputs[i], [tf.shape(inputs[i])[0],
                                 height, width, nchannels])
                 input_channels.append(ch)
-            concat_img = tf.concat(CHANNEL_DIM, input_channels)
+            concat_img = tf.concat(input_channels, CHANNEL_DIM)
         return concat_img
 
 
