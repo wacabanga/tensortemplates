@@ -22,7 +22,7 @@ def conv_layer(x: TensVar,
                sfx: str,
                filter_height=5,
                filter_width=5,
-               nl=tf.nn.relu,
+               nl=tf.nn.elu,
                reuse=False,
                layer_norm=False) -> TensVar:
     """Neural Network Layer - nl(Wx+b)
