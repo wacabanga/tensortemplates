@@ -42,37 +42,9 @@ def layer(x: Tensor, inp_width: int, out_width: int, sfx: str, nl=tf.nn.elu,
     return op
 
 
-def flat_shape(shape):
-    """Return the flattened shape of a tensor"""
-    return np.prod(shape[1:])
-
-
-def width(shapes):
-    flat_shapes = [flat_shape(shape) for shape in shapes]
-    return np.sum(flat_shapes)
-
-
-def sliceup(t, shapes):
-    """Slice and reshape a flat input (batch_size, n) to list of tensors"""
-    with tf.name_scope("sliceup"):
-        noutputs = len(shapes)
-        outputs = []
-        lb = 0
-        flat_shapes = [flat_shape(shape) for shape in shapes]
-        for i in range(noutputs):
-            ub = lb + flat_shapes[i]
-            out = t[:, lb:ub]
-            # import pdb; pdb.set_trace()
-            new_shape = (tf.shape(out)[0],) + shapes[i][1:]
-            rout = tf.reshape(out, new_shape)
-            outputs.append(rout)
-            lb = ub
-    return outputs
-
-
 def template(inputs, inp_shapes, out_shapes, **kwargs):
     """
-    Residual neural network
+    LSTM Network
     Args:
         inputs : [tf.Tensor/tf.Variable] - inputs to be transformed
         out_shapes : (tf.TensorShape) | (Int) - shapes of output of tensor (includes batch_size)
