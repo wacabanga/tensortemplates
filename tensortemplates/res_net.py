@@ -85,6 +85,7 @@ def template(inputs, inp_shapes, out_shapes, **kwargs):
     block_size = kwargs['block_size']
     reuse = kwargs['reuse']
     batch_norm = kwargs['batch_norm']
+    nl = kwargs['nl']
 
     # Handle Reshaping (res_net expects input as vector)
     print("Input Shapes to Resnet", inp_shapes)
@@ -106,7 +107,7 @@ def template(inputs, inp_shapes, out_shapes, **kwargs):
             print("Input projection, layer_width: %s input_width: %s" % (layer_width, input_width))
             wx_sfx = 'wxinpproj'
             wx = layer(prev_layer, input_width, layer_width, wx_sfx,
-                       batch_norm=batch_norm, reuse=reuse)
+                       batch_norm=batch_norm, reuse=reuse, nl=nl)
         else:
             print("Skipping input weight projection, layer_width: %s input_width: %s" % (layer_width, input_width))
             wx = prev_layer
@@ -123,7 +124,8 @@ def template(inputs, inp_shapes, out_shapes, **kwargs):
                 prev_layer = output = layer(prev_layer, prev_layer_width,
                                             layer_width, sfx,
                                             batch_norm=batch_norm,
-                                            reuse=reuse)
+                                            reuse=reuse,
+                                            nl=nl)
 
                  # On all other layers prev_layer_width = layer_width
                 prev_layer_width = layer_width
@@ -135,7 +137,7 @@ def template(inputs, inp_shapes, out_shapes, **kwargs):
         print("Output projection, layer_width: %s output_width: %s" % (layer_width, output_width))
         wx_sfx = 'wxoutproj'
         prev_layer = layer(prev_layer, layer_width, output_width, wx_sfx,
-                           batch_norm=batch_norm, reuse=reuse)
+                           batch_norm=batch_norm, reuse=reuse, nl=nl)
     else:
         print("Skipping output projection, layer_width: %s output_width: %s" % (layer_width, output_width))
 
@@ -156,4 +158,5 @@ def kwargs():
     options['block_size'] = (int, 1)
     options['layer_width'] = (int, 50)
     options['batch_norm'] = (bool, True)
+    options['nl'] = (str, 'elu')
     return options
