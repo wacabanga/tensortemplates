@@ -4,6 +4,8 @@ import tensorflow as tf
 from tensorflow import Tensor, Variable
 from tensorflow.contrib.layers import layer_norm
 from tensorflow import nn
+import pdb
+
 
 conv2d = nn.conv2d
 

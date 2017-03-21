@@ -2,7 +2,7 @@ import tensorflow as tf
 from tensorflow import Tensor
 import numpy as np
 from tensortemplates.util.misc import same
-
+import pdb
 
 def consistent_batch_size(shapes) -> bool:
     """Are the batch sizes the same"""
@@ -26,19 +26,19 @@ def layer(x: Tensor, inp_width: int, out_width: int, sfx: str, nl=tf.nn.elu,
           W_init=None, b_init=None, batch_norm: bool=True, reuse=False):
     """Neural Network Layer - nl(Wx+b)"""
     # import pdb; pdb.set_trace()
+    assert tf.get_variable_scope().reuse == reuse
     with tf.name_scope("layer"):
-        with tf.variable_scope(sfx) as scope:
+        with tf.variable_scope(sfx, reuse=reuse) as scope:
+            assert tf.get_variable_scope().reuse == reuse
+            # import pdb; pdb.set_trace()
             W = tf.get_variable(name="W_%s" % sfx, shape=(inp_width, out_width),
                                 initializer=W_init)
             b = tf.get_variable(name="b_%s" % sfx, shape=(out_width,),
                                 initializer=b_init)
             mmbias = tf.matmul(x, W) + b
-            # mmbias = tf.Print(mmbias, [mmbias], message="mmbias")
             if batch_norm:
                 mmbias = tf.contrib.layers.batch_norm(mmbias, reuse=reuse, scope=scope, is_training=False)
-                # mmbias = tf.contrib.layers.layer_norm(mmbias, reuse=reuse, scope=scope)
-            # mmbias = tf.Print(mmbias, [mmbias], message="lnmmbias")
-            op = nl(mmbias, name='op_%s' % sfx)
+            op = tf.nn.relu(mmbias, name='op_%s' % sfx)
     return op
 
 
@@ -79,6 +79,7 @@ def template(inputs, inp_shapes, out_shapes, **kwargs):
         batch_norm: Apply batch normalization to layers
         skip_last_nl: Skip nonlinearity on last layer
     """
+    # pdb.set_trace()
     # Meta Parameters
     layer_width = kwargs['layer_width']
     nblocks = kwargs['nblocks']
