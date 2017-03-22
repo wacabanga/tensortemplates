@@ -6,7 +6,6 @@ from tensorflow.contrib import rnn
 input shapes, output shapes
 -how to split up the input data (batch_size, 32, 32, 32) -> whatever I want
 '''
-
 def consistent_batch_size(shapes) -> bool:
     """Are the batch sizes the same?"""
     return same([shape[0] for shape in shapes])
@@ -24,17 +23,9 @@ def rnn_layer(x, n_hidden, n_classes):
 	return tf.matmul(outputs[-1], weights['out'], biases['out'])
 
 
-
-
 def rnn_template(inputs, 
 				inp_shapes, 
 				out_shapes,
-				learning_rate):
-	"""
-	Recurrent Neural Network / LSTM
-	Args:
-		inputs - []
-	"""
 
 	# Parameters
 	learning_rate = 0.001
@@ -54,7 +45,6 @@ def rnn_template(inputs,
 
 	inp = tf.placeholder('float', [None, n_steps, n_input])
 	out = tf.placeholder('float', [None, n_classes])
-
 
 	pred = rnn_layer(x)
 	cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=pred, labels=out_shapes))
@@ -83,9 +73,3 @@ def rnn_template(inputs,
 		print("Optimization Finished!")
 	return outputs, params
 		# DO testing?
-
-
-
-
-
-
