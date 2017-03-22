@@ -7,7 +7,7 @@ import tensorflow as tf
 
 template_module = {'res_net': res_net,
                    'conv_res_net': conv_res_net
-                   'recurr_net': recurr_net}
+                   }
 
 nl_module = {'elu': tf.nn.elu,
              'relu': tf.nn.relu}
