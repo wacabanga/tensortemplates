@@ -2,7 +2,7 @@ import tensorflow as tf
 from tensorflow import Tensor
 import numpy as np
 from tensortemplates.util.misc import same
-
+import pdb
 
 def consistent_batch_size(shapes) -> bool:
     """Are the batch sizes the same"""
@@ -79,6 +79,7 @@ def template(inputs, inp_shapes, out_shapes, **kwargs):
         batch_norm: Apply batch normalization to layers
         skip_last_nl: Skip nonlinearity on last layer
     """
+    # pdb.set_trace()
     # Meta Parameters
     layer_width = kwargs['layer_width']
     nblocks = kwargs['nblocks']
