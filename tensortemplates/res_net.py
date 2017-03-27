@@ -38,7 +38,7 @@ def layer(x: Tensor, inp_width: int, out_width: int, sfx: str, nl=tf.nn.elu,
             mmbias = tf.matmul(x, W) + b
             if batch_norm:
                 mmbias = tf.contrib.layers.batch_norm(mmbias, reuse=reuse, scope=scope, is_training=False)
-            op = tf.nn.relu(mmbias, name='op_%s' % sfx)
+            op = nl(mmbias, name='op_%s' % sfx)
     return op
 
 
